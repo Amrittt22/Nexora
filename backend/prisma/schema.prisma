@@ -52,6 +52,7 @@ model User {
   taskAssignments TaskAssignee[]
   sentInvitations WorkspaceInvite[] @relation("InvitationSender")
   taskActivities TaskActivity[] @relation("TaskActivityActor")
+  comments Comment[]
 }
 
 model Workspace {
@@ -109,6 +110,7 @@ model Task {
   labels      TaskLabel[]
   assignees   TaskAssignee[]
   activities TaskActivity[]
+  comments Comment[]
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -188,4 +190,19 @@ model TaskActivity {
   @@index([taskId, createdAt])
   @@index([projectId, createdAt])
   @@index([actorId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@index([authorId])
 }

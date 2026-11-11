@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { X } from 'lucide-react'
-import type { Label, Task, TaskPriority, TaskStatus , WorkspaceMember} from '../../app/types'
+import type { Label, Task, TaskPriority, TaskStatus, WorkspaceMember } from '../../app/types'
 import type { WorkspaceInvite } from '../../hooks/useWorkspaceInvites'
 import TaskActivityTimeline from '../tasks/TaskActivityTimeline'
+import TaskComments from '../tasks/TaskComments'
 
 function Modal({ children }: { children: ReactNode }) {
   return <div className="fixed inset-0 z-30 grid place-items-center bg-black/40 p-4">{children}</div>
@@ -393,18 +394,16 @@ export function AssigneePicker({
                 key={member.id}
                 type="button"
                 onClick={() => onToggle(member.id)}
-                className={`flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition ${
-                  isSelected
+                className={`flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition ${isSelected
                     ? 'bg-brand-soft text-brand'
                     : 'hover:bg-black/[.04] dark:hover:bg-white/[.05]'
-                }`}
+                  }`}
               >
                 <span
-                  className={`grid h-4 w-4 shrink-0 place-items-center rounded border ${
-                    isSelected
+                  className={`grid h-4 w-4 shrink-0 place-items-center rounded border ${isSelected
                       ? 'border-brand bg-brand text-white'
                       : 'border-line'
-                  }`}
+                    }`}
                 >
                   {isSelected ? '✓' : ''}
                 </span>
@@ -600,7 +599,9 @@ export function EditTaskModal({
   const [status, setStatus] = useState<TaskStatus>('TODO')
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM')
   const [dueDate, setDueDate] = useState('')
-  const [section, setSection] = useState<'details' | 'activity'>('details')
+  const [section, setSection] = useState<
+    'details' | 'activity' | 'comments'
+  >('details')
 
   useEffect(() => {
     if (!task) return
@@ -640,18 +641,17 @@ export function EditTaskModal({
           onClose={onClose}
         />
         <div className="mt-5 flex border-b border-line" role="tablist">
-          {(['details', 'activity'] as const).map((item) => (
+          {(['details', 'activity', 'comments'] as const).map((item) => (
             <button
               key={item}
               type="button"
               role="tab"
               aria-selected={section === item}
               onClick={() => setSection(item)}
-              className={`border-b-2 px-3 py-2 text-xs font-semibold capitalize ${
-                section === item
+              className={`border-b-2 px-3 py-2 text-xs font-semibold capitalize ${section === item
                   ? 'border-brand text-brand'
                   : 'border-transparent text-quiet'
-              }`}
+                }`}
             >
               {item}
             </button>
@@ -724,13 +724,17 @@ export function EditTaskModal({
               />
             </div>
           </>
-        ) : (
+        ) : section === 'activity' ? (
           <div className="mt-5">
             <TaskActivityTimeline
               taskId={task.id}
               labels={labels}
               members={members}
             />
+          </div>
+        ) : (
+          <div className="mt-5">
+            <TaskComments taskId={task.id} />
           </div>
         )}
       </form>

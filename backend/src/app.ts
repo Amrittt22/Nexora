@@ -8,6 +8,7 @@ import workspaceRouter from './routes/workspace.routes.js'
 import taskUpdateRouter from './routes/task-update.routes.js'
 import labelRouter from './routes/label.routes.js'
 import taskActivityRouter from './routes/task-activity.routes.js'
+import commentRouter from './routes/comment.routes.js'
 
 const app = express()
 
@@ -22,5 +23,6 @@ app.use('/api/v1/tasks', taskActivityRouter)
 app.use('/api/v1/tasks', taskUpdateRouter)
 app.use('/api/v1', healthRouter)
 app.use('/api/v1/workspaces/:workspaceId/labels', labelRouter)
+app.use('/api/v1', commentRouter)
 
 export default app
