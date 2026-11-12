@@ -1,10 +1,8 @@
 # DevFlow
 
-DevFlow is a full-stack collaboration platform for software teams to organize
-workspaces, projects, tasks, assignments, labels, invitations, and task
-activity history.
+DevFlow is a full-stack collaboration platform for software teams to organize workspaces, projects, tasks, assignments, labels, invitations, task activity history, and team discussions.
 
-## Current features
+## Current Features
 
 - Supabase email authentication, password recovery, sessions, and sign-out.
 - Server-side Supabase bearer-token verification.
@@ -14,16 +12,16 @@ activity history.
 - Workspace roles: `OWNER`, `ADMIN`, and `MEMBER`.
 - Projects and project-scoped tasks.
 - Task status, priority, due dates, labels, and member assignments.
-- Task activity history for creation, edits, status changes, labels,
-  assignments, and deletion.
-- Frontend task activity timeline with responsive light and dark themes.
+- Task activity history for creation, edits, status changes, labels, assignments, and deletion.
+- Frontend task activity timeline.
+- Task comments with create, edit, delete, and comment author information.
+- Comment ownership enforcement: users can edit and delete their own comments.
+- Workspace membership verification for task comment access.
+- Responsive light and dark themes.
 - Backend RBAC and cross-workspace resource isolation.
 - Vitest and Supertest authenticated API integration tests.
 
-Comments, notifications, real-time collaboration, GitHub integration, and AI
-features remain planned work.
-
-## Roles and permissions
+## Roles and Permissions
 
 | Role | Permissions |
 |---|---|
@@ -31,10 +29,9 @@ features remain planned work.
 | `ADMIN` | Workspace member administration and member invitations; cannot change owner/admin roles or invite administrators |
 | `MEMBER` | Access workspace resources and collaborate on projects and tasks; cannot administer membership or invitations |
 
-Authorization is enforced by the backend. Frontend role checks only control
-visibility and interaction states.
+Authorization is enforced by the backend. Frontend role checks only control visibility and interaction states.
 
-## Technology stack
+## Technology Stack
 
 | Area | Technology |
 |---|---|
@@ -46,13 +43,13 @@ visibility and interaction states.
 | Validation | Zod |
 | Testing | Vitest and Supertest |
 
-## Repository structure
+## Repository Structure
 
 ```text
 frontend/       React application
 backend/        Express API, Prisma schema, services, routes, and tests
 docs/           Architecture and product documentation
-DEVFLOW_PLAN.md Project roadmap
+plan.md         Project roadmap
 ```
 
 ## Prerequisites
@@ -62,7 +59,7 @@ DEVFLOW_PLAN.md Project roadmap
 - A PostgreSQL connection for the backend
 - A separate local PostgreSQL database named `devflow_test` for integration tests
 
-## Supabase setup
+## Supabase Setup
 
 1. Create a Supabase project.
 2. Enable Email authentication.
@@ -70,10 +67,9 @@ DEVFLOW_PLAN.md Project roadmap
 4. Configure the password recovery and invitation redirects:
    - `http://localhost:5173/reset-password`
    - `http://localhost:5173/invite`
-5. Obtain the project URL, publishable key, and backend database connection
-   string.
+5. Obtain the project URL, publishable key, and backend database connection string.
 
-## Environment variables
+## Environment Variables
 
 Create `backend/.env`:
 
@@ -92,8 +88,8 @@ Create `backend/.env.test` for the isolated local test database:
 TEST_DATABASE_URL="postgresql://postgres:<local-password>@localhost:5432/devflow_test"
 ```
 
-The test configuration refuses to run unless `TEST_DATABASE_URL` uses
-`localhost` or `127.0.0.1` and the database name is exactly `devflow_test`.
+The test configuration refuses to run unless `TEST_DATABASE_URL` uses `localhost` or `127.0.0.1` and the database name is exactly `devflow_test`.
+
 Never commit either environment file or any Supabase secret.
 
 Create `frontend/.env`:
@@ -106,7 +102,7 @@ VITE_API_URL="http://localhost:4000"
 
 Only publishable values belong in frontend environment variables.
 
-## Run locally
+## Run Locally
 
 From the repository root, install dependencies:
 
@@ -138,7 +134,7 @@ npm run dev
 
 The frontend normally runs at `http://localhost:5173`.
 
-## Prisma commands
+## Prisma Commands
 
 Use the existing Prisma 7 configuration for the normal backend database:
 
@@ -155,7 +151,9 @@ Set-Location .\backend
 npm run prisma7:test:migrate
 ```
 
-## API endpoints
+Never use the test migration configuration against the development or production database.
+
+## API Endpoints
 
 Protected endpoints require a valid Supabase bearer token:
 
@@ -165,14 +163,14 @@ Authorization: Bearer <access-token>
 
 Authentication and authorization are enforced on the backend.
 
-### Health and authentication
+### Health and Authentication
 
 | Method | Endpoint | Purpose | Access |
 |---|---|---|---|
 | GET | `/api/v1/health` | Check API health | Public |
 | GET | `/api/v1/auth/me` | Get the authenticated user | Authenticated |
 
-### Workspaces, members, invitations, and projects
+### Workspaces, Members, Invitations, and Projects
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -188,7 +186,7 @@ Authentication and authorization are enforced on the backend.
 | GET | `/api/v1/workspaces/:workspaceId/projects` | List workspace projects |
 | POST | `/api/v1/workspaces/:workspaceId/projects` | Create a project |
 
-### Tasks and task resources
+### Tasks and Task Resources
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -199,30 +197,96 @@ Authentication and authorization are enforced on the backend.
 | PUT | `/api/v1/tasks/:taskId/labels` | Replace task labels |
 | PUT | `/api/v1/tasks/:taskId/assignees` | Replace task assignees |
 | GET | `/api/v1/tasks/:taskId/activity` | Read task activity history |
+| GET | `/api/v1/tasks/:taskId/comments` | List task comments |
+| POST | `/api/v1/tasks/:taskId/comments` | Create a task comment |
+| PATCH | `/api/v1/comments/:commentId` | Update a comment |
+| DELETE | `/api/v1/comments/:commentId` | Delete a comment |
 | GET | `/api/v1/workspaces/:workspaceId/labels` | List workspace labels |
 | POST | `/api/v1/workspaces/:workspaceId/labels` | Create a workspace label |
 
-### Task activity history
+### Task Activity History
 
-Activity records are persisted through Prisma and include the event type,
-actor, details, and timestamp. The activity endpoint returns up to the 100
-most recent records for an authorized task:
+Activity records are persisted through Prisma and include the event type, actor, details, and timestamp.
+
+Supported events include:
+
+- Task creation
+- Task updates
+- Status changes
+- Label changes
+- Assignee changes
+- Task deletion
+
+The activity endpoint returns up to the 100 most recent records for an authorized task:
 
 ```http
 GET /api/v1/tasks/:taskId/activity
 Authorization: Bearer <access-token>
 ```
 
+### Task Comments
+
+DevFlow supports task-level discussions through its comment system.
+
+Users can:
+
+- View comments associated with a task.
+- Create new comments.
+- Edit their own comments.
+- Delete their own comments.
+- View comment author information and timestamps.
+
+Comment content is trimmed, must not be empty, and has a maximum length of 5,000 characters.
+
+The backend verifies workspace membership before allowing access to task comments. Editing and deleting comments additionally require comment ownership.
+
+Example:
+
+```http
+GET /api/v1/tasks/:taskId/comments
+Authorization: Bearer <access-token>
+```
+
+Create a comment:
+
+```http
+POST /api/v1/tasks/:taskId/comments
+Authorization: Bearer <access-token>
+Content-Type: application/json
+
+{
+  "content": "This task is ready for review."
+}
+```
+
+Update a comment:
+
+```http
+PATCH /api/v1/comments/:commentId
+Authorization: Bearer <access-token>
+Content-Type: application/json
+
+{
+  "content": "Updated comment content."
+}
+```
+
+Delete a comment:
+
+```http
+DELETE /api/v1/comments/:commentId
+Authorization: Bearer <access-token>
+```
+
 ## Testing
 
-Integration tests use the exported Express app directly; they never start the
-production HTTP server. Supabase token verification is mocked only at
-`supabase.auth.getUser`. Prisma, services, authorization checks, and routes
-remain real.
+Integration tests use the exported Express app directly; they never start the production HTTP server.
+
+Supabase token verification is mocked only at `supabase.auth.getUser`. Prisma, services, authorization checks, and routes remain real.
 
 The test database must be isolated and configured in `backend/.env.test`.
-Fixtures create owner, admin, member, and non-member users across two
-workspaces, then clean up generated records after the suite.
+
+Fixtures create owner, admin, member, and non-member users across two workspaces, then clean up generated records after the suite.
 
 Run the tests from `backend`:
 
@@ -234,6 +298,34 @@ npm test
 npm run build
 ```
 
-The integration suite covers authentication failures, verified identity,
-workspace RBAC, invitation role escalation, membership protection, project
-and task isolation, labels, assignments, and task activity isolation.
+The integration tests cover:
+
+- Authentication failures and verified identity.
+- Workspace RBAC and invitation role escalation.
+- Membership protection.
+- Project and task isolation.
+- Labels and assignments.
+- Task activity history and isolation.
+- Task comment creation, retrieval, editing, deletion, and authorization.
+
+The Task Comments integration suite contains nine tests.
+
+## Roadmap
+
+Upcoming development:
+
+1. Notifications system.
+2. Real-time collaboration.
+3. Advanced search, filtering, and dashboard improvements.
+4. Sprint management.
+5. GitHub integration and pull request insights.
+6. Redis and BullMQ background jobs.
+7. Rate limiting and performance improvements.
+8. UI polishing and responsive design improvements.
+9. Production deployment and final testing.
+
+## Project Status
+
+DevFlow is actively under development. Authentication, workspace management, project and task management, task activity history, and task comments have been implemented.
+
+Notifications are the next planned development milestone.
