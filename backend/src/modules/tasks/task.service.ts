@@ -26,16 +26,16 @@ const taskFields = {
     },
   },
   assignees: {
-  select: {
-    user: {
-      select: {
-        id: true,
-        email: true,
-        displayName: true,
+    select: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+        },
       },
     },
   },
-},
 } as const
 
 type TaskWithRelations = {
@@ -341,6 +341,7 @@ export async function setTaskLabels(
   })
 }
 
+
 export async function setTaskAssignees(
   taskId: string,
   userId: string,
@@ -360,6 +361,8 @@ export async function setTaskAssignees(
       },
       select: {
         id: true,
+        title: true,
+        creatorId: true,
         projectId: true,
         assignees: {
           select: {
@@ -397,9 +400,11 @@ export async function setTaskAssignees(
     const previousUserIds = task.assignees.map(({ userId }) => userId)
     const previousUserIdSet = new Set(previousUserIds)
     const requestedUserIdSet = new Set(assigneeIds)
+
     const addedUserIds = assigneeIds.filter(
       (assigneeId) => !previousUserIdSet.has(assigneeId),
     )
+
     const removedUserIds = previousUserIds.filter(
       (userId) => !requestedUserIdSet.has(userId),
     )
@@ -434,6 +439,23 @@ export async function setTaskAssignees(
       })
     }
 
+    // Notify newly assigned users, excluding the person assigning them.
+    const notificationRecipients = addedUserIds.filter(
+      (assigneeId) => assigneeId !== userId,
+    )
+
+    if (notificationRecipients.length > 0) {
+      await transaction.notification.createMany({
+        data: notificationRecipients.map((recipientId) => ({
+          type: 'TASK_ASSIGNED',
+          message: `You were assigned to "${task.title}"`,
+          recipientId,
+          actorId: userId,
+          taskId,
+        })),
+      })
+    }
+
     const updatedTask = await transaction.task.findUniqueOrThrow({
       where: {
         id: taskId,
@@ -444,6 +466,7 @@ export async function setTaskAssignees(
     return formatTask(updatedTask)
   })
 }
+
 
 export async function deleteTask(taskId: string, userId: string) {
   return prisma.$transaction(async (transaction) => {

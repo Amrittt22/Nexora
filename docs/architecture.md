@@ -1,6 +1,6 @@
-# DevFlow Architecture
+# Nexora Architecture
 
-DevFlow follows a full-stack architecture with a React frontend and an Express backend connected to PostgreSQL through Prisma.
+Nexora follows a full-stack architecture with a React frontend and an Express backend connected to PostgreSQL through Prisma.
 
 Frontend files live in `frontend/` and API/database files live in `backend/`.
 
@@ -108,7 +108,7 @@ Workspace membership and resource ownership are checked before protected operati
 
 ## Testing Architecture
 
-DevFlow uses Vitest and Supertest.
+Nexora uses Vitest and Supertest.
 
 - Unit tests validate isolated business logic.
 - Integration tests exercise the Express application.

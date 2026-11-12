@@ -54,26 +54,85 @@ export async function listCommentsForTask(
   })
 }
 
+
 export async function createComment(
   taskId: string,
   userId: string,
   input: CreateCommentInput,
 ) {
-  const task = await canAccessTask(taskId, userId)
+  return prisma.$transaction(async (transaction) => {
+    const task = await transaction.task.findFirst({
+      where: {
+        id: taskId,
+        project: {
+          workspace: {
+            members: {
+              some: { userId },
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        creatorId: true,
+        assignees: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    })
 
-  if (!task) {
-    return null
-  }
+    if (!task) {
+      return null
+    }
 
-  return prisma.comment.create({
-    data: {
-      content: input.content,
-      taskId,
-      authorId: userId,
-    },
-    select: commentFields,
+    const comment = await transaction.comment.create({
+      data: {
+        content: input.content,
+        taskId,
+        authorId: userId,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
+          },
+        },
+      },
+    })
+
+    const recipients = new Set<string>()
+
+    if (task.creatorId && task.creatorId !== userId) {
+      recipients.add(task.creatorId)
+    }
+
+    for (const assignee of task.assignees) {
+      if (assignee.userId !== userId) {
+        recipients.add(assignee.userId)
+      }
+    }
+
+    if (recipients.size > 0) {
+      await transaction.notification.createMany({
+        data: Array.from(recipients).map((recipientId) => ({
+          type: 'COMMENT_ADDED',
+          message: `${comment.author.displayName || comment.author.email} commented on "${task.title}"`,
+          recipientId,
+          actorId: userId,
+          taskId,
+        })),
+      })
+    }
+
+    return comment
   })
 }
+
 
 export async function updateComment(
   commentId: string,

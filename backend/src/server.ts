@@ -4,5 +4,5 @@ import app from './app.js'
 const port = Number(process.env.PORT ?? 4000)
 
 app.listen(port, () => {
-  console.log(`DevFlow API listening on port ${port}`)
+  console.log(`Nexora API listening on port ${port}`)
 })

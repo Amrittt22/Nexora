@@ -1,8 +1,8 @@
-# DevFlow — Development Roadmap
+# Nexora — Development Roadmap
 
 ## Project Overview
 
-DevFlow is a full-stack collaboration and project management platform designed to help software teams manage workspaces, projects, tasks, assignments, discussions, and team collaboration.
+Nexora is a full-stack collaboration and project management platform designed to help modern teams manage workspaces, projects, tasks, assignments, discussions, and team collaboration.
 
 The goal is to build a production-quality application with strong backend architecture, proper authorization, scalable services, and a polished user experience.
 
@@ -203,13 +203,13 @@ Generate notifications for relevant events:
 
 ## 3.5 GitHub Integration
 
-Integrate GitHub to connect software development activity with DevFlow.
+Integrate GitHub to connect software development activity with Nexora.
 
 Planned functionality:
 
 - GitHub OAuth integration.
 - Connect GitHub repositories.
-- Associate repositories with DevFlow projects.
+- Associate repositories with Nexora projects.
 - Display linked repositories.
 - Pull request information.
 - Pull request status tracking.
@@ -345,9 +345,9 @@ The following principles will guide implementation:
 
 # 9. Project Scope
 
-DevFlow is focused on full-stack project management, collaboration, backend engineering, and software development workflow integration.
+Nexora is focused on full-stack project management, collaboration, backend engineering, and software development workflow integration.
 
-AI-powered functionality is intentionally outside the current DevFlow scope and is reserved for a separate future project.
+AI-powered functionality is intentionally outside the current Nexora scope and is reserved for a separate future project.
 
 ---
 

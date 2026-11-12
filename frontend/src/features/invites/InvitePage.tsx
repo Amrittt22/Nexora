@@ -64,7 +64,7 @@ export default function InvitePage({ user }: { user: User }) {
         method: 'POST',
       })
 
-      setMessage(`You joined ${workspace.name}. Redirecting to DevFlow...`)
+      setMessage(`You joined ${workspace.name}. Redirecting to Nexora...`)
 
       window.setTimeout(() => {
         window.location.assign('/')
@@ -84,7 +84,7 @@ export default function InvitePage({ user }: { user: User }) {
     <main className="grid min-h-screen place-items-center bg-canvas px-4 text-ink">
       <section className="w-full max-w-md rounded-xl border border-line bg-panel p-6 shadow-xl">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand">
-          DevFlow invitation
+          Nexora invitation
         </p>
 
         <h1 className="mt-2 font-display text-2xl font-bold">

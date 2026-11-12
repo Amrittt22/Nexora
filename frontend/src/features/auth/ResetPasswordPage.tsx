@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
           Set a new password
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Choose a new password for your DevFlow account.
+          Choose a new password for your Nexora account.
         </p>
 
         {!isComplete && (
@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
                 New password
               </span>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#7967FF] focus:ring-2 focus:ring-[#A99AFF]/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 type="password"
                 autoComplete="new-password"
                 minLength={8}
@@ -66,7 +66,7 @@ export default function ResetPasswordPage() {
                 Confirm new password
               </span>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#7967FF] focus:ring-2 focus:ring-[#A99AFF]/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 type="password"
                 autoComplete="new-password"
                 minLength={8}
@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
             )}
 
             <button
-              className="w-full rounded-lg bg-orange-500 px-4 py-2.5 font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-[#7967FF] px-4 py-2.5 font-semibold text-white hover:bg-[#6856E8] disabled:cursor-not-allowed disabled:opacity-60"
               type="submit"
               disabled={isLoading}
             >
@@ -94,10 +94,10 @@ export default function ResetPasswordPage() {
 
         {isComplete && (
           <a
-            className="mt-6 block text-center text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400"
+            className="mt-6 block text-center text-sm font-medium text-[#7967FF] hover:text-[#6856E8] dark:text-[#A99AFF]"
             href="/"
           >
-            Return to DevFlow
+            Return to Nexora
           </a>
         )}
 

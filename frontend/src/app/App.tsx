@@ -29,9 +29,9 @@ export default function App() {
   const { user, isLoading: isLoadingAuth } = useAuth()
   const isInvitePage = window.location.pathname === '/invite'
   const isResetPasswordPage = window.location.pathname === '/reset-password'
-  const [dark, setDark] = useState(() => localStorage.getItem('devflow-theme') === 'dark')
+  const [dark, setDark] = useState(() => localStorage.getItem('nexora-theme') === 'dark' || localStorage.getItem('devflow-theme') === 'dark')
   const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = localStorage.getItem('devflow-active-tab')
+    const savedTab = localStorage.getItem('nexora-active-tab') ?? localStorage.getItem('devflow-active-tab')
 
     return tabs.some((tab) => tab.label === savedTab)
       ? savedTab!
@@ -50,7 +50,7 @@ export default function App() {
   const [createTaskAssigneeIds, setCreateTaskAssigneeIds] = useState<string[]>([])
   const [editTaskAssigneeIds, setEditTaskAssigneeIds] = useState<string[]>([])
   const [newLabelName, setNewLabelName] = useState('')
-  const [newLabelColor, setNewLabelColor] = useState('#7C3AED')
+  const [newLabelColor, setNewLabelColor] = useState('#7967FF')
   const notify = useCallback((message: string) => setNotice(message), [])
   const workspace = useWorkspaceData(isLoadingAuth, user?.id, notify)
   const task = useTaskData(workspace.activeProject?.id, notify)
@@ -73,7 +73,7 @@ export default function App() {
   )
 
   useEffect(() => {
-    localStorage.setItem('devflow-active-tab', activeTab)
+    localStorage.setItem('nexora-active-tab', activeTab)
   }, [activeTab])
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function App() {
   function toggleTheme() {
     const next = !dark
     setDark(next)
-    localStorage.setItem('devflow-theme', next ? 'dark' : 'light')
+    localStorage.setItem('nexora-theme', next ? 'dark' : 'light')
   }
 
   async function handleSignOut() {
@@ -220,7 +220,7 @@ export default function App() {
       const setter = target === 'create' ? setCreateTaskLabelIds : setEditTaskLabelIds
       setter((current) => [...current, created.id])
       setNewLabelName('')
-      setNewLabelColor('#7C3AED')
+      setNewLabelColor('#7967FF')
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not create label')
     }
@@ -275,7 +275,7 @@ if (isInvitePage) {
       <Sidebar workspaces={workspace.workspaces} projects={workspace.projects} activeWorkspaceId={workspace.activeWorkspaceId} activeProjectId={workspace.activeProjectId} isLoading={workspace.isLoadingWorkspaces} onWorkspace={workspace.setActiveWorkspaceId} onProject={workspace.setActiveProjectId} onAddWorkspace={() => setWorkspaceModalOpen(true)} onAddProject={() => workspace.activeWorkspaceId ? setProjectModalOpen(true) : notify('Create a workspace first')} onNotify={notify} />
       <main className="min-w-0 flex-1">
         <header className="flex min-h-[76px] items-center justify-between border-b border-line bg-panel px-6 max-[680px]:px-4">
-          <div><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-quiet">Workspace</p><h1 className="font-display text-xl font-bold">{workspace.activeProject?.name ?? workspace.activeWorkspace?.name ?? 'DevFlow'}</h1></div>
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-quiet">Workspace</p><h1 className="font-display text-xl font-bold">{workspace.activeProject?.name ?? workspace.activeWorkspace?.name ?? 'Nexora'}</h1></div>
           <div className="flex items-center gap-3">{canInviteMembers && workspace.activeWorkspace && (<><button type="button" onClick={() => setInvitesModalOpen(true)} className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-semibold text-quiet hover:bg-black/[.04] sm:flex dark:hover:bg-white/[.05]"><Users size={15} />Manage invitations</button><button type="button" onClick={() => setInviteModalOpen(true)} className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-semibold text-quiet hover:bg-black/[.04] sm:flex dark:hover:bg-white/[.05]"><Users size={15} />Invite member</button></>)}<button onClick={() => void handleBackendCheck()} className="hidden text-xs text-quiet hover:text-ink sm:block">Check backend</button><button onClick={toggleTheme} className="text-quiet" aria-label="Toggle theme">{dark ? <Sun size={17} /> : <Moon size={17} />}</button><button onClick={() => void handleSignOut()} className="text-quiet" aria-label="Sign out"><LogOut size={17} /></button></div>
         </header>
         <div className="mx-auto max-w-[1200px] px-6 py-5 max-[680px]:px-4">
@@ -311,7 +311,7 @@ if (isInvitePage) {
 }
 
 function Sidebar({ workspaces, projects, activeWorkspaceId, activeProjectId, isLoading, onWorkspace, onProject, onAddWorkspace, onAddProject, onNotify }: { workspaces: Workspace[]; projects: Array<{ id: string; name: string }>; activeWorkspaceId: string; activeProjectId: string; isLoading: boolean; onWorkspace: (id: string) => void; onProject: (id: string) => void; onAddWorkspace: () => void; onAddProject: () => void; onNotify: (message: string) => void }) {
-  return <aside className="sticky top-0 flex h-screen w-[252px] shrink-0 flex-col border-r border-line bg-panel p-3.5 max-[680px]:w-[62px] max-[680px]:px-2"><div className="mb-5 flex h-12 items-center gap-2.5 rounded-lg border border-line px-2 max-[680px]:justify-center max-[680px]:border-0"><span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 font-display text-base font-extrabold text-white">D</span><strong className="text-xs max-[680px]:hidden">DevFlow Studio</strong><ChevronDown size={15} className="ml-auto text-quiet max-[680px]:hidden" /></div><div className="space-y-1 border-b border-line pb-4"><SideLink icon={Home} label="Home" onClick={() => onNotify('Home')} /><SideLink icon={Check} label="My tasks" onClick={() => onNotify('My tasks')} /><SideLink icon={Inbox} label="Inbox" onClick={() => onNotify('Inbox')} /><SideLink icon={Activity} label="Activity" onClick={() => onNotify('Activity')} /></div><Section title="YOUR WORKSPACES" onAdd={onAddWorkspace}>{isLoading ? <p className="px-2 py-2 text-[10px] text-quiet">Loading…</p> : workspaces.map((item) => <button key={item.id} onClick={() => onWorkspace(item.id)} className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-xs ${activeWorkspaceId === item.id ? 'bg-brand-soft font-semibold text-brand' : 'text-quiet'}`}><Users size={14} /><span className="truncate max-[680px]:hidden">{item.name}</span></button>)}</Section><Section title="YOUR PROJECTS" onAdd={onAddProject}>{projects.map((item) => <button key={item.id} onClick={() => onProject(item.id)} className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-xs ${activeProjectId === item.id ? 'bg-brand-soft font-semibold text-brand' : 'text-quiet'}`}><FolderKanban size={14} /><span className="truncate max-[680px]:hidden">{item.name}</span></button>)}</Section></aside>
+  return <aside className="sticky top-0 flex h-screen w-[252px] shrink-0 flex-col border-r border-line bg-panel p-3.5 max-[680px]:w-[62px] max-[680px]:px-2"><div className="mb-5 flex h-12 items-center gap-2.5 rounded-lg border border-line px-2 max-[680px]:justify-center max-[680px]:border-0"><span className="grid h-7 w-7 place-items-center rounded-lg bg-[#111827] font-display text-base font-extrabold text-[#A99AFF]">N</span><strong className="text-xs max-[680px]:hidden">Nexora</strong><ChevronDown size={15} className="ml-auto text-quiet max-[680px]:hidden" /></div><div className="space-y-1 border-b border-line pb-4"><SideLink icon={Home} label="Home" onClick={() => onNotify('Home')} /><SideLink icon={Check} label="My tasks" onClick={() => onNotify('My tasks')} /><SideLink icon={Inbox} label="Inbox" onClick={() => onNotify('Inbox')} /><SideLink icon={Activity} label="Activity" onClick={() => onNotify('Activity')} /></div><Section title="YOUR WORKSPACES" onAdd={onAddWorkspace}>{isLoading ? <p className="px-2 py-2 text-[10px] text-quiet">Loading…</p> : workspaces.map((item) => <button key={item.id} onClick={() => onWorkspace(item.id)} className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-xs ${activeWorkspaceId === item.id ? 'bg-brand-soft font-semibold text-brand' : 'text-quiet'}`}><Users size={14} /><span className="truncate max-[680px]:hidden">{item.name}</span></button>)}</Section><Section title="YOUR PROJECTS" onAdd={onAddProject}>{projects.map((item) => <button key={item.id} onClick={() => onProject(item.id)} className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-xs ${activeProjectId === item.id ? 'bg-brand-soft font-semibold text-brand' : 'text-quiet'}`}><FolderKanban size={14} /><span className="truncate max-[680px]:hidden">{item.name}</span></button>)}</Section></aside>
 }
 
 function Section({ title, onAdd, children }: { title: string; onAdd: () => void; children: ReactNode }) {

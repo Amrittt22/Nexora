@@ -1,6 +1,10 @@
-# DevFlow
+# Nexora — All-in-One Work Platform
 
-DevFlow is a full-stack collaboration platform for software teams to organize workspaces, projects, tasks, assignments, labels, invitations, task activity history, and team discussions.
+Nexora is a full-stack collaboration and work management platform that helps teams manage workspaces, projects, tasks, assignments, labels, invitations, task activity history, and team discussions in one place.
+
+**One workspace. Infinite possibilities.**
+
+Nexora is an intelligent workspace for modern teams. Plan, collaborate, and move work forward — all in one place.
 
 ## Current Features
 
@@ -226,7 +230,7 @@ Authorization: Bearer <access-token>
 
 ### Task Comments
 
-DevFlow supports task-level discussions through its comment system.
+Nexora supports task-level discussions through its comment system.
 
 Users can:
 
@@ -326,6 +330,6 @@ Upcoming development:
 
 ## Project Status
 
-DevFlow is actively under development. Authentication, workspace management, project and task management, task activity history, and task comments have been implemented.
+Nexora is actively under development. Authentication, workspace management, project and task management, task activity history, task comments, and notifications have been implemented.
 
 Notifications are the next planned development milestone.

@@ -46,6 +46,13 @@ export default function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 dark:bg-slate-950">
       <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl dark:bg-slate-900">
+        <div className="mb-6 flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#111827] font-display text-xl font-extrabold text-[#A99AFF]">N</span>
+          <div>
+            <p className="font-display text-lg font-bold text-slate-900 dark:text-white">Nexora</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">One workspace. Infinite possibilities.</p>
+          </div>
+        </div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           {isResetRequest
             ? 'Reset your password'
@@ -57,8 +64,8 @@ export default function AuthPage() {
           {isResetRequest
             ? 'Enter your email and we will send you a secure reset link.'
             : isSignUp
-              ? 'Sign up to start using DevFlow.'
-              : 'Sign in to continue to DevFlow.'}
+              ? 'Sign up to start using Nexora.'
+              : 'Sign in to continue to Nexora.'}
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -68,7 +75,7 @@ export default function AuthPage() {
                 Full name
               </span>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#7967FF] focus:ring-2 focus:ring-[#A99AFF]/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 type="text"
                 autoComplete="name"
                 value={fullName}
@@ -83,7 +90,7 @@ export default function AuthPage() {
               Email
             </span>
             <input
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#7967FF] focus:ring-2 focus:ring-[#A99AFF]/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               type="email"
               autoComplete="email"
               value={email}
@@ -98,7 +105,7 @@ export default function AuthPage() {
                 Password
               </span>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#7967FF] focus:ring-2 focus:ring-[#A99AFF]/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 type="password"
                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
                 value={password}
@@ -116,7 +123,7 @@ export default function AuthPage() {
           )}
 
           <button
-            className="w-full rounded-lg bg-orange-500 px-4 py-2.5 font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-[#7967FF] px-4 py-2.5 font-semibold text-white hover:bg-[#6856E8] disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isLoading}
           >
@@ -130,10 +137,10 @@ export default function AuthPage() {
           </button>
         </form>
 
-        <div className="mt-5 flex flex-col gap-3 text-sm font-medium text-orange-600 dark:text-orange-400">
+        <div className="mt-5 flex flex-col gap-3 text-sm font-medium text-[#7967FF] dark:text-[#A99AFF]">
           {!isResetRequest && (
             <button
-              className="hover:text-orange-700"
+              className="hover:text-[#6856E8]"
               type="button"
               onClick={() => {
                 setIsSignUp(!isSignUp)
@@ -142,11 +149,11 @@ export default function AuthPage() {
             >
               {isSignUp
                 ? 'Already have an account? Sign in'
-                : 'New to DevFlow? Create an account'}
+                : 'New to Nexora? Create an account'}
             </button>
           )}
           <button
-            className="hover:text-orange-700"
+            className="hover:text-[#6856E8]"
             type="button"
             onClick={() => {
               setIsResetRequest(!isResetRequest)

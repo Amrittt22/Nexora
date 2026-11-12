@@ -8,7 +8,15 @@ import { apiRequest } from '../lib/api'
 import type { Project } from '../app/types'
 
 function projectStorageKey(workspaceId: string) {
+  return `nexora-active-project:${workspaceId}`
+}
+
+function legacyProjectStorageKey(workspaceId: string) {
   return `devflow-active-project:${workspaceId}`
+}
+
+function getStoredWorkspaceId() {
+  return localStorage.getItem('nexora-active-workspace') ?? localStorage.getItem('devflow-active-workspace') ?? ''
 }
 
 export function useWorkspaceData(
@@ -18,14 +26,18 @@ export function useWorkspaceData(
 ) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(
-    () => localStorage.getItem('devflow-active-workspace') ?? '',
+    () => getStoredWorkspaceId(),
   )
   const [projects, setProjects] = useState<Project[]>([])
   const [loadedProjectsWorkspaceId, setLoadedProjectsWorkspaceId] =
     useState('')
   const [activeProjectId, setActiveProjectId] = useState(() => {
-    const workspaceId = localStorage.getItem('devflow-active-workspace')
-    return workspaceId ? localStorage.getItem(projectStorageKey(workspaceId)) ?? '' : ''
+    const workspaceId = getStoredWorkspaceId()
+    return workspaceId
+      ? localStorage.getItem(projectStorageKey(workspaceId)) ??
+          localStorage.getItem(legacyProjectStorageKey(workspaceId)) ??
+          ''
+      : ''
   })
   const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true)
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
@@ -40,14 +52,14 @@ export function useWorkspaceData(
     fetchWorkspacesFromBackend()
       .then((loaded) => {
         if (cancelled) return
-        const saved = localStorage.getItem('devflow-active-workspace')
+        const saved = getStoredWorkspaceId()
         const selected = loaded.some((workspace) => workspace.id === saved)
           ? saved!
           : loaded[0]?.id ?? ''
         setWorkspaces(loaded)
         setActiveWorkspaceId(selected)
-        if (selected) localStorage.setItem('devflow-active-workspace', selected)
-        else localStorage.removeItem('devflow-active-workspace')
+        if (selected) localStorage.setItem('nexora-active-workspace', selected)
+        else localStorage.removeItem('nexora-active-workspace')
       })
       .catch((error: unknown) => {
         if (!cancelled) notify(error instanceof Error ? error.message : 'Could not load workspaces')
@@ -122,7 +134,7 @@ export function useWorkspaceData(
       const workspace = await createWorkspaceInBackend(name)
       setWorkspaces((current) => [...current, workspace])
       setActiveWorkspaceId(workspace.id)
-      localStorage.setItem('devflow-active-workspace', workspace.id)
+      localStorage.setItem('nexora-active-workspace', workspace.id)
       notify(`Workspace "${workspace.name}" created`)
       return workspace
     } finally {
@@ -161,7 +173,7 @@ export function useWorkspaceData(
     isCreatingProject,
     setActiveWorkspaceId: (id: string) => {
       setActiveWorkspaceId(id)
-      localStorage.setItem('devflow-active-workspace', id)
+      localStorage.setItem('nexora-active-workspace', id)
     },
     setActiveProjectId: (id: string) => {
       setActiveProjectId(id)

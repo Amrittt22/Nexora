@@ -1,3 +1,3 @@
-# DevFlow Product Plan
+# Nexora Product Plan
 
-See [`../DEVFLOW_PLAN.md`](../DEVFLOW_PLAN.md) for the product goals, MVP scope, roadmap, and data model.
+See [`../NEXORA_PLAN.md`](../NEXORA_PLAN.md) for the product goals, MVP scope, roadmap, and data model.

@@ -14,7 +14,7 @@ module.exports = {
         ink: 'rgb(var(--ink) / <alpha-value>)',
         quiet: 'rgb(var(--quiet) / <alpha-value>)',
         line: 'rgb(var(--line) / <alpha-value>)',
-        brand: { DEFAULT: '#7055df', soft: '#f1edff' },
+        brand: { DEFAULT: '#7967FF', soft: '#EEEAFE' },
       },
       boxShadow: { soft: '0 4px 16px rgba(29,31,45,.035)' },
     },
