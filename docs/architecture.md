@@ -1,139 +1,426 @@
-# Nexora Architecture
+# Nexora — System Architecture
 
-Nexora follows a full-stack architecture with a React frontend and an Express backend connected to PostgreSQL through Prisma.
+## 1. Overview
 
-Frontend files live in `frontend/` and API/database files live in `backend/`.
+Nexora follows a feature-oriented full-stack architecture.
 
-## Frontend
+The application is divided into two main parts:
 
-The frontend is built using React, TypeScript, Vite, and Tailwind CSS.
+- **Frontend:** React application responsible for the user interface, authentication state, data fetching, and user interactions.
+- **Backend:** Express REST API responsible for authentication verification, authorization, business logic, validation, and database operations.
 
-### Directory Structure
+The backend communicates with PostgreSQL through Prisma 7 and its PostgreSQL driver adapter. Supabase provides authentication and hosts the PostgreSQL database.
 
-- `src/app/` — application shell, routing, global providers, and application types.
-- `src/components/` — reusable interface components.
-- `src/components/modals/` — workspace, project, task, and invitation modals.
-- `src/components/tasks/` — task-related UI components, including activity history and comments.
-- `src/components/workspaces/` — workspace-related interface components.
-- `src/features/` — screens and logic grouped by product feature, including authentication.
-- `src/hooks/` — shared React hooks for managing application data and interactions.
-- `src/services/` — API clients and request functions.
-- `src/lib/` — shared libraries and integrations, including Supabase and the authenticated API request helper.
-- `src/types/` — shared frontend types.
-- `src/utils/` — small reusable helpers.
+## 2. High-Level Architecture
 
-### Frontend Data Flow
+```mermaid
+flowchart TD
+    U[User] --> FE[React + TypeScript Frontend]
+    FE --> AUTH[Supabase Auth]
+    FE --> API[Express REST API]
+    API --> MW[Authentication Middleware]
+    MW --> SVC[Feature Modules / Services]
+    SVC --> PRISMA[Prisma 7 + PostgreSQL Adapter]
+    PRISMA --> DB[(Supabase PostgreSQL)]
+    SVC --> RESP[JSON API Response]
+    RESP --> FE
+```
 
-The frontend uses React components and custom hooks to manage application state and communicate with backend services.
+## 3. Technology Stack
 
-Typical request flow:
+| Layer | Technology |
+|---|---|
+| Frontend framework | React |
+| Frontend language | TypeScript |
+| Build tool | Vite |
+| Styling | Tailwind CSS |
+| Backend runtime | Node.js |
+| Backend framework | Express.js |
+| Backend language | TypeScript |
+| Authentication | Supabase Auth |
+| Database | PostgreSQL via Supabase |
+| ORM | Prisma 7 |
+| Database adapter | `@prisma/adapter-pg` |
+| Validation | Zod |
+| Caching / performance | Redis |
+| Testing | Vitest and Supertest |
 
-`React Component → Custom Hook → Service Function → API Client → Express API`
+## 4. Frontend Architecture
 
-The API client retrieves the current Supabase access token and attaches it to protected backend requests.
+Frontend source code is organized by application responsibility and reusable feature logic.
 
-### Task Collaboration Components
+### Main directories
 
-The task interface currently includes:
+```text
+frontend/src/
+├── app/
+│   ├── App.tsx
+│   └── types.ts
+├── components/
+│   ├── modals/
+│   ├── tasks/
+│   └── notifications/
+├── features/
+│   ├── auth/
+│   └── invites/
+├── hooks/
+├── lib/
+├── services/
+└── ...
+```
 
-- `TaskActivityTimeline.tsx` — displays task activity history.
-- `TaskComments.tsx` — displays, creates, edits, and deletes task comments.
-- `TaskModals.tsx` — integrates task details, activity history, and comments into the task editing interface.
+### Responsibilities
 
-## Backend
+- `app/` — application shell, shared application types, and main interface composition.
+- `components/` — reusable UI components, task views, modals, and notification interface.
+- `features/` — feature-specific functionality such as authentication and invitation acceptance.
+- `hooks/` — React hooks for managing application data and UI state.
+- `lib/` — shared clients and application integrations, including Supabase.
+- `services/` — API request functions and frontend-to-backend communication.
 
-The backend is built using Node.js, Express, TypeScript, Prisma 7, and PostgreSQL.
+### Data flow
 
-### Directory Structure
+```text
+React Component
+      ↓
+Custom Hook
+      ↓
+Frontend Service
+      ↓
+Express REST API
+      ↓
+JSON Response
+      ↓
+Hook State Update
+      ↓
+Component Re-render
+```
 
-- `src/modules/` — feature modules containing business logic, schemas, and services.
-- `src/modules/tasks/` — task-related functionality, including comment validation and comment services.
-- `src/routes/` — API route registration.
-- `src/middleware/` — authentication, authorization, and error handling.
-- `src/config/` — environment and service configuration.
-- `src/test/` — unit and integration tests.
-- `src/test/integration/` — authenticated API integration tests.
-- `prisma/` — Prisma schema and database migrations.
+The frontend uses the authenticated Supabase session to obtain an access token. Protected API requests send this token in the Authorization header as a Bearer token.
 
-### Backend Data Flow
+## 5. Backend Architecture
 
-Keep API request flow understandable:
+The backend uses a modular structure. Business logic is grouped by feature rather than placed into one large service layer.
 
-`Request → Route → Middleware → Controller/Service → Prisma → PostgreSQL`
+### Main directory structure
 
-Authentication middleware verifies Supabase bearer tokens before protected routes execute.
+```text
+backend/
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── src/
+│   ├── config/
+│   ├── middleware/
+│   ├── modules/
+│   │   ├── auth/
+│   │   ├── labels/
+│   │   ├── projects/
+│   │   ├── tasks/
+│   │   ├── workspaces/
+│   │   └── notifications/
+│   ├── routes/
+│   ├── test/
+│   ├── generated/
+│   │   └── prisma/
+│   ├── app.ts
+│   └── ...
+├── prisma7.config.ts
+└── prisma7.test.config.ts
+```
 
-Services handle business logic and authorization checks. Prisma manages database operations.
+### Responsibilities
 
-### Task Collaboration Modules
+- `config/` — Prisma client, Supabase clients, and test database configuration.
+- `middleware/` — authentication and request-level protection.
+- `modules/` — feature-specific business logic and service functions.
+- `routes/` — REST API endpoint definitions and request handling.
+- `test/` — backend unit and integration tests.
+- `prisma/` — database schema and migration history.
+- `generated/prisma/` — generated Prisma client.
 
-The backend currently supports:
+### Request processing flow
 
-**Task Activity History**
-- Records task creation, updates, status changes, label changes, assignment changes, and deletion.
-- Provides an API to retrieve task activity history.
+```text
+Incoming HTTP Request
+        ↓
+Express Router
+        ↓
+Authentication Middleware
+        ↓
+Route Handler
+        ↓
+Feature Service
+        ↓
+Prisma Client
+        ↓
+PostgreSQL
+        ↓
+JSON Response
+```
 
-**Task Comments**
-- Provides comment creation, retrieval, editing, and deletion.
-- Validates comment content.
-- Checks workspace membership before granting access.
-- Restricts comment editing and deletion to the comment author.
+Protected routes use `requireAuth` middleware. The middleware validates the Supabase access token and attaches the authenticated user to `res.locals.authUser`.
 
-## Database and Authentication
+Feature services use the authenticated user's ID when performing user-scoped and workspace-scoped operations.
 
-### Database
-
-- PostgreSQL is the primary database.
-- Prisma 7 is used as the ORM.
-- Database models and relationships are defined in `prisma/schema.prisma`.
-- Schema changes are tracked through Prisma migrations.
+## 6. Authentication and Authorization
 
 ### Authentication
 
-Supabase Auth handles user authentication.
+Supabase Auth manages:
 
-The Express backend verifies Supabase access tokens and synchronizes authenticated users with the PostgreSQL database through Prisma.
+- User registration.
+- User sign-in.
+- Session management.
+- Sign-out.
+- Password recovery.
+- Invitation authentication flow.
+
+The frontend obtains the current access token from the Supabase session.
+
+The backend validates the token using Supabase's `auth.getUser()` operation.
 
 ### Authorization
 
-Authorization is enforced by the backend.
+Authentication establishes the user's identity. Authorization determines which operations the user is allowed to perform.
 
-Workspace roles:
+Nexora uses workspace roles:
 
-- `OWNER`
-- `ADMIN`
-- `MEMBER`
+| Role | Description |
+|---|---|
+| OWNER | Workspace ownership and privileged management operations |
+| ADMIN | Administrative workspace operations permitted by the authorization rules |
+| MEMBER | Standard workspace collaboration |
 
-Workspace membership and resource ownership are checked before protected operations are allowed.
+Every protected workspace-scoped operation must verify workspace membership and the required permission on the backend.
 
-## Testing Architecture
+Task assignment validation ensures assigned users belong to the task's workspace.
 
-Nexora uses Vitest and Supertest.
+Invitation authorization restricts role assignment and invitation management according to the actor's workspace role.
 
-- Unit tests validate isolated business logic.
-- Integration tests exercise the Express application.
-- Supabase token verification is mocked at the authentication boundary.
-- Prisma, services, routes, and authorization logic remain real during integration testing.
-- Integration tests use an isolated local PostgreSQL database named `devflow_test`.
+## 7. Database Architecture
 
-## Current Architecture Scope
+PostgreSQL is the primary persistent data store.
 
-Implemented architectural areas:
+Prisma 7 provides database access through the PostgreSQL driver adapter.
 
-- Authentication and user synchronization.
-- Workspace and membership management.
-- Role-based authorization.
-- Project and task management.
-- Task activity history.
-- Task comments.
-- PostgreSQL persistence through Prisma.
-- Backend unit and integration testing.
+### Main domain entities
 
-Upcoming architectural additions:
+- **User:** application user associated with Supabase authentication.
+- **Workspace:** collaboration boundary for members, projects, and shared resources.
+- **WorkspaceMember:** membership and role information.
+- **WorkspaceInvite:** invitation details, status, sender, role, and expiry.
+- **Project:** project belonging to a workspace.
+- **Task:** unit of work belonging to a project.
+- **TaskAssignee:** relationship between tasks and assigned users.
+- **Label:** reusable workspace label.
+- **TaskActivity:** records important task events.
+- **TaskComment:** comments associated with tasks.
+- **Notification:** persistent notifications delivered to users.
 
-- Notification services and persistence.
-- Real-time collaboration.
-- Advanced search and filtering.
-- Sprint management.
-- GitHub integration.
-- Redis and BullMQ background processing.
+### Important relationships
+
+```mermaid
+erDiagram
+    USER ||--o{ WORKSPACE_MEMBER : joins
+    WORKSPACE ||--o{ WORKSPACE_MEMBER : contains
+    WORKSPACE ||--o{ PROJECT : owns
+    PROJECT ||--o{ TASK : contains
+    USER ||--o{ TASK_ASSIGNEE : assigned
+    TASK ||--o{ TASK_ASSIGNEE : has
+    WORKSPACE ||--o{ LABEL : defines
+    TASK ||--o{ TASK_ACTIVITY : records
+    TASK ||--o{ TASK_COMMENT : contains
+    USER ||--o{ TASK_COMMENT : writes
+    USER ||--o{ NOTIFICATION : receives
+    TASK ||--o{ NOTIFICATION : relates_to
+```
+
+This diagram presents the main domain relationships; it is not an exhaustive rendering of every Prisma relation.
+
+### Database migrations
+
+Database schema changes are maintained through Prisma migrations.
+
+- `backend/prisma/schema.prisma` defines the data model.
+- `backend/prisma/migrations/` stores migration history.
+- Prisma Client is generated from the schema.
+- Production schema changes are applied through migration deployment.
+
+Prisma 7 configuration is maintained separately in the backend configuration files. The application uses `DATABASE_URL` for its normal database connection.
+
+## 8. Task Activity History
+
+Task activity history provides a record of important task operations.
+
+Supported activity categories include:
+
+- `TASK_CREATED`
+- `TASK_UPDATED`
+- `STATUS_CHANGED`
+- `LABELS_CHANGED`
+- `ASSIGNEES_CHANGED`
+- `TASK_DELETED`
+
+Activity records are associated with tasks and include the event information needed to display a task timeline.
+
+The task activity API exposes:
+
+```http
+GET /api/v1/tasks/:taskId/activity
+```
+
+## 9. Task Comments
+
+Comments allow workspace members to discuss tasks.
+
+Supported operations:
+
+```http
+GET    /api/v1/tasks/:taskId/comments
+POST   /api/v1/tasks/:taskId/comments
+PATCH  /api/v1/comments/:commentId
+DELETE /api/v1/comments/:commentId
+```
+
+Authorization rules:
+
+- Users must belong to the task's workspace to view or create comments.
+- Only the comment author can edit or delete their comment.
+- Comment content is trimmed, cannot be empty, and has a maximum length of 5,000 characters.
+
+Comment creation and its associated notification creation are handled transactionally.
+
+## 10. Notification Architecture
+
+Nexora uses database-backed notifications to inform users about relevant collaboration events.
+
+### Supported notification types
+
+| Type | Trigger |
+|---|---|
+| `TASK_ASSIGNED` | A user is newly assigned to a task |
+| `COMMENT_ADDED` | A comment is added to a task |
+| `TASK_UPDATED` | A task is updated |
+
+### Notification recipients
+
+- **TASK_ASSIGNED:** newly assigned users, excluding the actor.
+- **COMMENT_ADDED:** task creator and current assignees, excluding the actor.
+- **TASK_UPDATED:** task creator and current assignees, excluding the actor.
+
+Recipient IDs are deduplicated to avoid duplicate notifications when the task creator is also an assignee.
+
+### Notification processing flow
+
+```mermaid
+flowchart TD
+    A[Task or Comment Action] --> B[Feature Service]
+    B --> C[Database Transaction]
+    C --> D[Update Task or Create Comment]
+    D --> E[Determine Notification Recipients]
+    E --> F[Exclude Actor and Deduplicate]
+    F --> G[Create Notification Records]
+    G --> H[Commit Transaction]
+    H --> I[Frontend Fetches Notifications]
+    I --> J[Notification Dropdown]
+```
+
+### Notification API
+
+```http
+GET   /api/v1/notifications
+GET   /api/v1/notifications/unread-count
+PATCH /api/v1/notifications/read-all
+PATCH /api/v1/notifications/:id/read
+```
+
+Notification access is scoped to the authenticated recipient. Users cannot read or modify another user's notifications.
+
+The frontend includes:
+
+- Notification data service.
+- Notification React hook.
+- Notification dropdown.
+- Unread count indicator.
+- Individual read action.
+- Mark-all-as-read action.
+- Task navigation when the related task is available in the currently selected project.
+
+Notifications are persisted in PostgreSQL. The current implementation retrieves notification data through API requests; real-time push delivery is a future enhancement.
+
+## 11. Testing Architecture
+
+The backend uses Vitest and Supertest.
+
+### Test coverage areas
+
+- Authentication middleware behavior.
+- Workspace authorization and role checks.
+- Task and comment operations.
+- Notification listing and recipient isolation.
+- Unread notification counts.
+- Marking notifications as read.
+- Marking all notifications as read.
+- Unauthorized access handling.
+
+Supabase authentication is mocked at the authentication boundary in integration tests.
+
+### Test database safety
+
+Integration tests use a dedicated local PostgreSQL database named `devflow_test`.
+
+The test database configuration validates that the connection points to localhost and the expected test database.
+
+The test environment must never run destructive test operations against the production Supabase database.
+
+## 12. Environment Configuration
+
+### Backend
+
+The backend requires environment variables for:
+
+- PostgreSQL connection.
+- Supabase project URL.
+- Supabase server-side credentials.
+- Frontend origin.
+- API port.
+
+The test environment additionally uses `TEST_DATABASE_URL` for the dedicated local test database.
+
+### Frontend
+
+The frontend requires:
+
+- Supabase project URL.
+- Supabase publishable key.
+- Backend API URL.
+
+Never expose server-only Supabase credentials or database connection strings through frontend environment variables.
+
+## 13. Engineering Guidelines
+
+1. Keep feature logic inside the appropriate backend module.
+2. Keep route handlers focused on HTTP request and response handling.
+3. Validate external input before using it in business logic.
+4. Verify workspace membership and permissions on the backend.
+5. Use transactions for related database operations that must succeed together.
+6. Use Prisma migrations for database schema changes.
+7. Keep test data isolated from production data.
+8. Add tests for important authorization and service rules.
+9. Keep frontend services responsible for API communication.
+10. Update architecture and README documentation when the implementation changes.
+
+## 14. Future Architecture Extensions
+
+The following are planned enhancements, not part of the current verified implementation:
+
+- Redis-based caching and rate limiting.
+- Background job processing.
+- Real-time collaboration and notification delivery.
+- Sprint and timeline modules.
+- Issue tracking.
+- GitHub repository and pull request integration.
+- Docker-based deployment.
+- GitHub Actions CI/CD.
+- AI-powered project assistance.

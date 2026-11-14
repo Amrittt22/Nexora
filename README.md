@@ -1,100 +1,216 @@
-# Nexora — All-in-One Work Platform
+# Nexora
 
-Nexora is a full-stack collaboration and work management platform that helps teams manage workspaces, projects, tasks, assignments, labels, invitations, task activity history, and team discussions in one place.
+**A Full-Stack Project Management and Team Collaboration Platform**
 
-**One workspace. Infinite possibilities.**
+Nexora is a full-stack collaboration platform built to help software teams organize projects, manage tasks, coordinate teammates, and track development progress.
 
-Nexora is an intelligent workspace for modern teams. Plan, collaborate, and move work forward — all in one place.
+It provides workspace-based collaboration with role-based access control, task management, comments, activity history, and database-backed notifications.
 
-## Current Features
+## Features
 
-- Supabase email authentication, password recovery, sessions, and sign-out.
-- Server-side Supabase bearer-token verification.
-- Prisma user synchronization, including display names and `/api/v1/auth/me`.
-- Workspace creation and membership management.
-- Workspace invitations with expiry, acceptance, resend, and revocation.
-- Workspace roles: `OWNER`, `ADMIN`, and `MEMBER`.
-- Projects and project-scoped tasks.
-- Task status, priority, due dates, labels, and member assignments.
-- Task activity history for creation, edits, status changes, labels, assignments, and deletion.
-- Frontend task activity timeline.
-- Task comments with create, edit, delete, and comment author information.
-- Comment ownership enforcement: users can edit and delete their own comments.
-- Workspace membership verification for task comment access.
-- Responsive light and dark themes.
-- Backend RBAC and cross-workspace resource isolation.
-- Vitest and Supertest authenticated API integration tests.
+### Authentication and Workspaces
+- Supabase authentication with email sign-up and sign-in.
+- Secure session management and password recovery.
+- Workspace creation and membership.
+- Role-based access control with OWNER, ADMIN, and MEMBER roles.
+- Workspace invitations with email delivery and acceptance.
+- Invitation listing, resend, and revocation.
 
-## Roles and Permissions
+### Project and Task Management
+- Create and manage projects inside workspaces.
+- Create, edit, and delete tasks.
+- Task statuses: TODO, IN_PROGRESS, and DONE.
+- Task priorities: LOW, MEDIUM, and HIGH.
+- Optional task due dates.
+- Drag-and-drop task status updates.
+- Assign tasks to workspace members.
+- Reusable workspace labels with custom colors.
 
-| Role | Permissions |
-|---|---|
-| `OWNER` | Full workspace administration, member role changes, member removal, and administrator invitations |
-| `ADMIN` | Workspace member administration and member invitations; cannot change owner/admin roles or invite administrators |
-| `MEMBER` | Access workspace resources and collaborate on projects and tasks; cannot administer membership or invitations |
+### Multiple Project Views
+- **Board View:** Organize tasks by status.
+- **List View:** View and manage tasks in a structured list.
+- **Calendar View:** Visualize tasks by due date.
+- **Overview View:** Access project overview information.
 
-Authorization is enforced by the backend. Frontend role checks only control visibility and interaction states.
+### Collaboration
+- Task comments with author-based editing and deletion permissions.
+- Task activity history.
+- In-app notifications for:
+  - New task assignments.
+  - New comments.
+  - Task updates.
+- Notification unread count.
+- Individual and bulk notification read management.
+- Task navigation from notification items when the task is available in the selected project.
+
+### Engineering
+- Feature-oriented backend architecture.
+- Protected REST API endpoints.
+- Workspace-scoped authorization.
+- Prisma database migrations.
+- Automated backend tests using Vitest and Supertest.
 
 ## Technology Stack
 
-| Area | Technology |
+| Layer | Technologies |
 |---|---|
-| Frontend | React, TypeScript, Vite, Tailwind CSS |
-| Backend | Node.js, Express, TypeScript, REST API |
+| Frontend | React, TypeScript, Vite |
+| Styling | Tailwind CSS |
+| Backend | Node.js, Express.js, TypeScript |
+| Database | PostgreSQL, Supabase |
 | Authentication | Supabase Auth |
-| Database | PostgreSQL |
-| ORM | Prisma 7 with the PostgreSQL driver adapter |
+| ORM | Prisma 7 |
+| Database Adapter | Prisma PostgreSQL Adapter |
 | Validation | Zod |
-| Testing | Vitest and Supertest |
+| Caching / Performance | Redis |
+| Testing | Vitest, Supertest |
+| Version Control | Git, GitHub |
 
-## Repository Structure
+## Architecture
 
-```text
-frontend/       React application
-backend/        Express API, Prisma schema, services, routes, and tests
-docs/           Architecture and product documentation
-plan.md         Project roadmap
+Nexora uses a separated frontend and backend architecture.
+
+```mermaid
+flowchart TD
+    U[User] --> FE[React Frontend]
+    FE --> AUTH[Supabase Auth]
+    FE --> API[Express REST API]
+    API --> MW[Authentication Middleware]
+    MW --> MOD[Feature Modules]
+    MOD --> PRISMA[Prisma 7]
+    PRISMA --> DB[(PostgreSQL)]
+    DB --> PRISMA
+    PRISMA --> MOD
+    MOD --> API
+    API --> FE
 ```
 
-## Prerequisites
+### Request Flow
 
-- Node.js and npm
+```text
+User Interaction
+      ↓
+React Component
+      ↓
+Custom Hook
+      ↓
+Frontend Service
+      ↓
+Express REST API
+      ↓
+Authentication Middleware
+      ↓
+Feature Service
+      ↓
+Prisma ORM
+      ↓
+PostgreSQL
+```
+
+For more details, see [`docs/architecture.md`](docs/architecture.md).
+
+## Project Structure
+
+```text
+Nexora/
+│
+├── frontend/
+│   └── src/
+│       ├── app/
+│       ├── components/
+│       │   ├── modals/
+│       │   ├── tasks/
+│       │   └── notifications/
+│       ├── features/
+│       │   ├── auth/
+│       │   └── invites/
+│       ├── hooks/
+│       ├── lib/
+│       └── services/
+│
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── migrations/
+│   └── src/
+│       ├── config/
+│       ├── middleware/
+│       ├── modules/
+│       │   ├── auth/
+│       │   ├── labels/
+│       │   ├── projects/
+│       │   ├── tasks/
+│       │   ├── workspaces/
+│       │   └── notifications/
+│       ├── routes/
+│       ├── test/
+│       └── generated/
+│
+├── docs/
+│   └── architecture.md
+│
+├── NEXORA_PLAN.md
+└── README.md
+```
+
+## Getting Started
+
+### Prerequisites
+
+Install the following:
+
+- Node.js
+- npm
+- Git
 - A Supabase project with Email authentication enabled
-- A PostgreSQL connection for the backend
-- A separate local PostgreSQL database named `devflow_test` for integration tests
+- PostgreSQL access through your Supabase project
 
-## Supabase Setup
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Amrittt22/Nexora.git
+cd Nexora
+```
+
+### 2. Configure Supabase
 
 1. Create a Supabase project.
 2. Enable Email authentication.
-3. Add `http://localhost:5173/**` to the allowed redirect URLs.
-4. Configure the password recovery and invitation redirects:
-   - `http://localhost:5173/reset-password`
-   - `http://localhost:5173/invite`
-5. Obtain the project URL, publishable key, and backend database connection string.
+3. Configure the frontend redirect URLs.
+4. Add `http://localhost:5173/**` to the allowed redirect URLs.
+5. Obtain the project URL and publishable key.
+6. Obtain the PostgreSQL Session Pooler connection string.
 
-## Environment Variables
+Password recovery uses:
+
+```text
+http://localhost:5173/reset-password
+```
+
+Invitation acceptance uses:
+
+```text
+http://localhost:5173/invite
+```
+
+Both routes must be permitted in Supabase Redirect URLs.
+
+### 3. Configure backend environment variables
 
 Create `backend/.env`:
 
 ```env
-DATABASE_URL="your-backend-postgresql-connection-string"
+DATABASE_URL="your-supabase-postgresql-connection-string"
+
 SUPABASE_URL="https://your-project-ref.supabase.co"
 SUPABASE_PUBLISHABLE_KEY="your-publishable-key"
-SUPABASE_SECRET_KEY="your-server-only-supabase-secret-key"
+SUPABASE_SECRET_KEY="your-server-only-secret-key"
+
 FRONTEND_URL="http://localhost:5173"
 PORT=4000
 ```
 
-Create `backend/.env.test` for the isolated local test database:
-
-```env
-TEST_DATABASE_URL="postgresql://postgres:<local-password>@localhost:5432/devflow_test"
-```
-
-The test configuration refuses to run unless `TEST_DATABASE_URL` uses `localhost` or `127.0.0.1` and the database name is exactly `devflow_test`.
-
-Never commit either environment file or any Supabase secret.
+### 4. Configure frontend environment variables
 
 Create `frontend/.env`:
 
@@ -104,232 +220,175 @@ VITE_SUPABASE_PUBLISHABLE_KEY="your-publishable-key"
 VITE_API_URL="http://localhost:4000"
 ```
 
-Only publishable values belong in frontend environment variables.
+**Security:** Never commit `.env` files, database URLs, or server-side Supabase secrets to GitHub.
 
-## Run Locally
+### 5. Install backend dependencies
 
-From the repository root, install dependencies:
-
-```powershell
-Set-Location .\backend
-npm install
-
-Set-Location ..\frontend
+```bash
+cd backend
 npm install
 ```
 
-Run the backend:
+Generate the Prisma client:
 
-```powershell
-Set-Location .\backend
+```bash
 npm run prisma7:generate
-npx prisma7 migrate deploy
+```
+
+Apply database migrations:
+
+```bash
+npx prisma7 migrate deploy --config prisma7.config.ts
+```
+
+Start the backend:
+
+```bash
 npm run dev
 ```
 
-The API runs at `http://localhost:4000`.
+The backend runs at:
 
-Run the frontend in a second terminal:
+```text
+http://localhost:4000
+```
 
-```powershell
-Set-Location .\frontend
+Use the project's `prisma7` executable and configuration for Prisma operations.
+
+### 6. Install frontend dependencies
+
+Open a second terminal:
+
+```bash
+cd frontend
+npm install
 npm run dev
 ```
 
-The frontend normally runs at `http://localhost:5173`.
+The frontend normally runs at:
 
-## Prisma Commands
-
-Use the existing Prisma 7 configuration for the normal backend database:
-
-```powershell
-Set-Location .\backend
-npm run prisma7:generate
-npx prisma7 migrate deploy
+```text
+http://localhost:5173
 ```
-
-Use the guarded test configuration only for the local test database:
-
-```powershell
-Set-Location .\backend
-npm run prisma7:test:migrate
-```
-
-Never use the test migration configuration against the development or production database.
 
 ## API Endpoints
 
-Protected endpoints require a valid Supabase bearer token:
+All protected endpoints require a valid Supabase Bearer access token.
 
-```http
-Authorization: Bearer <access-token>
-```
+### Authentication
 
-Authentication and authorization are enforced on the backend.
-
-### Health and Authentication
-
-| Method | Endpoint | Purpose | Access |
-|---|---|---|---|
-| GET | `/api/v1/health` | Check API health | Public |
-| GET | `/api/v1/auth/me` | Get the authenticated user | Authenticated |
-
-### Workspaces, Members, Invitations, and Projects
-
-| Method | Endpoint | Purpose |
+| Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/v1/workspaces` | List the signed-in user's workspaces |
-| POST | `/api/v1/workspaces` | Create a workspace |
-| GET | `/api/v1/workspaces/:workspaceId/members` | List workspace members |
-| PATCH | `/api/v1/workspaces/:workspaceId/members/:userId` | Change a member role |
-| DELETE | `/api/v1/workspaces/:workspaceId/members/:userId` | Remove a member |
-| GET | `/api/v1/workspaces/:workspaceId/invites` | List invitations |
-| POST | `/api/v1/workspaces/:workspaceId/invites` | Create an invitation |
-| DELETE | `/api/v1/workspaces/:workspaceId/invites/:inviteId` | Revoke an invitation |
-| POST | `/api/v1/workspaces/invites/:inviteId/accept` | Accept an invitation |
+| GET | `/api/v1/auth/me` | Get authenticated user |
+
+### Workspaces and Projects
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/v1/workspaces` | List user's workspaces |
+| POST | `/api/v1/workspaces` | Create workspace |
 | GET | `/api/v1/workspaces/:workspaceId/projects` | List workspace projects |
-| POST | `/api/v1/workspaces/:workspaceId/projects` | Create a project |
+| POST | `/api/v1/workspaces/:workspaceId/projects` | Create project |
+| GET | `/api/v1/workspaces/:workspaceId/members` | List workspace members |
 
-### Tasks and Task Resources
+### Invitations
 
-| Method | Endpoint | Purpose |
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/v1/workspaces/:workspaceId/invites` | Create invitation |
+| GET | `/api/v1/workspaces/:workspaceId/invites` | List invitations |
+| POST | `/api/v1/workspaces/invites/:inviteId/accept` | Accept invitation |
+| DELETE | `/api/v1/workspaces/:workspaceId/invites/:inviteId` | Revoke invitation |
+
+### Tasks and Labels
+
+| Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/v1/projects/:projectId/tasks` | List project tasks |
-| POST | `/api/v1/projects/:projectId/tasks` | Create a task |
-| PATCH | `/api/v1/tasks/:taskId` | Update task details |
-| DELETE | `/api/v1/tasks/:taskId` | Delete a task |
+| POST | `/api/v1/projects/:projectId/tasks` | Create task |
+| PATCH | `/api/v1/tasks/:taskId` | Update task |
+| DELETE | `/api/v1/tasks/:taskId` | Delete task |
 | PUT | `/api/v1/tasks/:taskId/labels` | Replace task labels |
 | PUT | `/api/v1/tasks/:taskId/assignees` | Replace task assignees |
-| GET | `/api/v1/tasks/:taskId/activity` | Read task activity history |
-| GET | `/api/v1/tasks/:taskId/comments` | List task comments |
-| POST | `/api/v1/tasks/:taskId/comments` | Create a task comment |
-| PATCH | `/api/v1/comments/:commentId` | Update a comment |
-| DELETE | `/api/v1/comments/:commentId` | Delete a comment |
 | GET | `/api/v1/workspaces/:workspaceId/labels` | List workspace labels |
-| POST | `/api/v1/workspaces/:workspaceId/labels` | Create a workspace label |
+| POST | `/api/v1/workspaces/:workspaceId/labels` | Create label |
 
-### Task Activity History
+### Task Collaboration
 
-Activity records are persisted through Prisma and include the event type, actor, details, and timestamp.
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/v1/tasks/:taskId/activity` | Get task activity |
+| GET | `/api/v1/tasks/:taskId/comments` | List task comments |
+| POST | `/api/v1/tasks/:taskId/comments` | Create comment |
+| PATCH | `/api/v1/comments/:commentId` | Update comment |
+| DELETE | `/api/v1/comments/:commentId` | Delete comment |
 
-Supported events include:
+### Notifications
 
-- Task creation
-- Task updates
-- Status changes
-- Label changes
-- Assignee changes
-- Task deletion
-
-The activity endpoint returns up to the 100 most recent records for an authorized task:
-
-```http
-GET /api/v1/tasks/:taskId/activity
-Authorization: Bearer <access-token>
-```
-
-### Task Comments
-
-Nexora supports task-level discussions through its comment system.
-
-Users can:
-
-- View comments associated with a task.
-- Create new comments.
-- Edit their own comments.
-- Delete their own comments.
-- View comment author information and timestamps.
-
-Comment content is trimmed, must not be empty, and has a maximum length of 5,000 characters.
-
-The backend verifies workspace membership before allowing access to task comments. Editing and deleting comments additionally require comment ownership.
-
-Example:
-
-```http
-GET /api/v1/tasks/:taskId/comments
-Authorization: Bearer <access-token>
-```
-
-Create a comment:
-
-```http
-POST /api/v1/tasks/:taskId/comments
-Authorization: Bearer <access-token>
-Content-Type: application/json
-
-{
-  "content": "This task is ready for review."
-}
-```
-
-Update a comment:
-
-```http
-PATCH /api/v1/comments/:commentId
-Authorization: Bearer <access-token>
-Content-Type: application/json
-
-{
-  "content": "Updated comment content."
-}
-```
-
-Delete a comment:
-
-```http
-DELETE /api/v1/comments/:commentId
-Authorization: Bearer <access-token>
-```
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/v1/notifications` | List notifications |
+| GET | `/api/v1/notifications/unread-count` | Get unread count |
+| PATCH | `/api/v1/notifications/read-all` | Mark all as read |
+| PATCH | `/api/v1/notifications/:id/read` | Mark one as read |
 
 ## Testing
 
-Integration tests use the exported Express app directly; they never start the production HTTP server.
+The backend uses Vitest and Supertest for unit and integration testing.
 
-Supabase token verification is mocked only at `supabase.auth.getUser`. Prisma, services, authorization checks, and routes remain real.
+Run backend tests:
 
-The test database must be isolated and configured in `backend/.env.test`.
-
-Fixtures create owner, admin, member, and non-member users across two workspaces, then clean up generated records after the suite.
-
-Run the tests from `backend`:
-
-```powershell
-Set-Location .\backend
-npm run test:unit
-npm run test:integration
+```bash
+cd backend
 npm test
+```
+
+Run the backend production build:
+
+```bash
 npm run build
 ```
 
-The integration tests cover:
+Run the frontend production build:
 
-- Authentication failures and verified identity.
-- Workspace RBAC and invitation role escalation.
-- Membership protection.
-- Project and task isolation.
-- Labels and assignments.
-- Task activity history and isolation.
-- Task comment creation, retrieval, editing, deletion, and authorization.
+```bash
+cd frontend
+npm run build
+```
 
-The Task Comments integration suite contains nine tests.
+### Test Database Safety
+
+Integration tests use a dedicated local PostgreSQL database named `devflow_test`.
+
+The test database configuration checks that the connection targets the expected local database.
+
+Never use the production Supabase database for destructive integration test operations.
 
 ## Roadmap
 
-Upcoming development:
+The core project management and collaboration foundation is implemented.
 
-1. Notifications system.
-2. Real-time collaboration.
-3. Advanced search, filtering, and dashboard improvements.
-4. Sprint management.
-5. GitHub integration and pull request insights.
-6. Redis and BullMQ background jobs.
-7. Rate limiting and performance improvements.
-8. UI polishing and responsive design improvements.
-9. Production deployment and final testing.
+Upcoming development priorities include:
 
-## Project Status
+- Dedicated workspace member management.
+- Role changes and member removal.
+- Real-time collaboration.
+- Improved accessibility and responsive design.
+- Day Mode contrast improvements.
+- Timeline and sprint planning.
+- Issue tracking.
+- Redis-based performance improvements.
+- Docker and CI/CD.
+- GitHub integration.
+- AI-powered project assistance.
 
-Nexora is actively under development. Authentication, workspace management, project and task management, task activity history, task comments, and notifications have been implemented.
+See [`NEXORA_PLAN.md`](NEXORA_PLAN.md) for the detailed development roadmap.
 
-Notifications are the next planned development milestone.
+## Engineering Principles
+
+- Backend authorization is mandatory for workspace-scoped operations.
+- Database changes are managed through Prisma migrations.
+- Business logic is organized into feature-based modules.
+- Related database operations use transactions where required.
+- Environment secrets are never committed.
+- Important functionality is covered by automated tests.
