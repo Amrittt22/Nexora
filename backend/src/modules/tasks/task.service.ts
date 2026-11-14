@@ -138,6 +138,7 @@ export async function createTaskForProject(
         status: input.status,
         priority: input.priority,
         dueDate: input.dueDate,
+        creatorId: userId,
       },
       select: taskFields,
     })
@@ -159,6 +160,7 @@ export async function createTaskForProject(
     return formatTask(task)
   })
 }
+
 
 export async function updateTask(
   taskId: string,
@@ -185,6 +187,12 @@ export async function updateTask(
         status: true,
         priority: true,
         dueDate: true,
+        creatorId: true,
+        assignees: {
+          select: {
+            userId: true,
+          },
+        },
       },
     })
 
@@ -202,15 +210,18 @@ export async function updateTask(
       string,
       { from: string | null; to: string | null }
     > = {}
+
     for (const field of Object.keys(input) as Array<keyof UpdateTaskInput>) {
       const oldValue = existingTask[field]
       const newValue = updatedTask[field]
+
       const from =
         oldValue instanceof Date
           ? oldValue.toISOString()
           : oldValue === undefined || oldValue === null
             ? null
             : String(oldValue)
+
       const to =
         newValue instanceof Date
           ? newValue.toISOString()
@@ -226,6 +237,7 @@ export async function updateTask(
     if (Object.keys(changes).length > 0) {
       const type =
         changes.status !== undefined ? 'STATUS_CHANGED' : 'TASK_UPDATED'
+
       await transaction.taskActivity.create({
         data: {
           taskId,
@@ -235,11 +247,36 @@ export async function updateTask(
           details: { changes },
         },
       })
+
+      const recipients = new Set<string>()
+
+      if (existingTask.creatorId && existingTask.creatorId !== userId) {
+        recipients.add(existingTask.creatorId)
+      }
+
+      for (const assignee of existingTask.assignees) {
+        if (assignee.userId !== userId) {
+          recipients.add(assignee.userId)
+        }
+      }
+
+      if (recipients.size > 0) {
+        await transaction.notification.createMany({
+          data: Array.from(recipients).map((recipientId) => ({
+            type: 'TASK_UPDATED',
+            message: `Task "${existingTask.title}" was updated`,
+            recipientId,
+            actorId: userId,
+            taskId,
+          })),
+        })
+      }
     }
 
     return formatTask(updatedTask)
   })
 }
+
 
 export async function setTaskLabels(
   taskId: string,

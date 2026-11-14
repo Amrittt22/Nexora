@@ -4,7 +4,7 @@ import AuthPage from '../features/auth/AuthPage'
 import ResetPasswordPage from '../features/auth/ResetPasswordPage'
 import { useAuth } from '../features/auth/AuthContext'
 import { signOut } from '../services/auth.service'
-import { fetchCurrentUserFromBackend, type Workspace } from '../services/api.service'
+import { type Workspace } from '../services/api.service'
 import { useWorkspaceData } from '../hooks/useWorkspaceData'
 import { useTaskData } from '../hooks/useTaskData'
 import { useLabelData } from '../hooks/useLabelData'
@@ -13,10 +13,13 @@ import { useWorkspaceInvites } from '../hooks/useWorkspaceInvites'
 import type { Task, TaskStatus, WorkspaceMember } from './types'
 import { TaskBoard, TaskCalendar, TaskFilterBar, TaskList } from '../components/tasks/TaskViews'
 import WorkspaceMembersPanel from '../components/workspaces/WorkspaceMembersPanel'
-import { CreateTaskModal, EditTaskModal, InvitationLinkModal, ProjectModal, WorkspaceModal , InviteMemberModal,WorkspaceInvitesModal} from '../components/modals/TaskModals'
+import { CreateTaskModal, EditTaskModal, InvitationLinkModal, ProjectModal, WorkspaceModal, InviteMemberModal, WorkspaceInvitesModal } from '../components/modals/TaskModals'
 import InvitePage from '../features/invites/InvitePage'
 import { apiRequest } from '../lib/api'
-
+import { Bell } from 'lucide-react'
+import { useNotificationData } from '../hooks/useNotificationData'
+import type { Notification } from '../services/notification.service'
+import NotificationDropdown from '../components/notifications/NotificationDropdown'
 const tabs = [
   { label: 'Overview', icon: LayoutGrid },
   { label: 'List', icon: List },
@@ -71,6 +74,34 @@ export default function App() {
     canInviteMembers,
     notify,
   )
+  const notificationData = useNotificationData(true)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+
+  async function handleNotificationClick(notification: Notification) {
+    try {
+      await notificationData.markAsRead(notification.id)
+      setNotificationsOpen(false)
+
+      if (!notification.taskId) return
+
+      const selectedTask = task.tasks.find(
+        (item) => item.id === notification.taskId,
+      )
+
+      if (selectedTask) {
+        setActiveTab('Board')
+        openTaskEditor(selectedTask)
+      } else {
+        notify('Task is not available in the currently selected project')
+      }
+    } catch (error) {
+      notify(
+        error instanceof Error
+          ? error.message
+          : 'Could not open notification',
+      )
+    }
+  }
 
   useEffect(() => {
     localStorage.setItem('nexora-active-tab', activeTab)
@@ -91,15 +122,6 @@ export default function App() {
   async function handleSignOut() {
     const { error } = await signOut()
     if (error) notify(error.message)
-  }
-
-  async function handleBackendCheck() {
-    try {
-      const backendUser = await fetchCurrentUserFromBackend()
-      notify(`Backend verified: ${backendUser.email ?? backendUser.id}`)
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Backend request failed')
-    }
   }
 
   async function inviteWorkspaceMember(
@@ -169,7 +191,7 @@ export default function App() {
   async function removeWorkspaceMember(target: WorkspaceMember) {
     const confirmed = window.confirm(
       `Remove ${target.displayName || target.email} from this workspace? ` +
-        'Their assignments in this workspace will also be cleared.',
+      'Their assignments in this workspace will also be cleared.',
     )
 
     if (!confirmed) return
@@ -254,21 +276,21 @@ export default function App() {
     )
   }
 
- if (!user) {
-  return (
-    <div className={`${dark ? 'dark' : ''} min-h-screen`}>
-      <AuthPage />
-    </div>
-  )
-}
+  if (!user) {
+    return (
+      <div className={`${dark ? 'dark' : ''} min-h-screen`}>
+        <AuthPage />
+      </div>
+    )
+  }
 
-if (isInvitePage) {
-  return (
-    <div className={`${dark ? 'dark' : ''} min-h-screen`}>
-      <InvitePage user={user} />
-    </div>
-  )
-}
+  if (isInvitePage) {
+    return (
+      <div className={`${dark ? 'dark' : ''} min-h-screen`}>
+        <InvitePage user={user} />
+      </div>
+    )
+  }
 
   return <div className={`${dark ? 'dark' : ''} min-h-screen bg-canvas text-ink`}>
     <div className="flex min-h-screen">
@@ -276,7 +298,38 @@ if (isInvitePage) {
       <main className="min-w-0 flex-1">
         <header className="flex min-h-[76px] items-center justify-between border-b border-line bg-panel px-6 max-[680px]:px-4">
           <div><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-quiet">Workspace</p><h1 className="font-display text-xl font-bold">{workspace.activeProject?.name ?? workspace.activeWorkspace?.name ?? 'Nexora'}</h1></div>
-          <div className="flex items-center gap-3">{canInviteMembers && workspace.activeWorkspace && (<><button type="button" onClick={() => setInvitesModalOpen(true)} className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-semibold text-quiet hover:bg-black/[.04] sm:flex dark:hover:bg-white/[.05]"><Users size={15} />Manage invitations</button><button type="button" onClick={() => setInviteModalOpen(true)} className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-semibold text-quiet hover:bg-black/[.04] sm:flex dark:hover:bg-white/[.05]"><Users size={15} />Invite member</button></>)}<button onClick={() => void handleBackendCheck()} className="hidden text-xs text-quiet hover:text-ink sm:block">Check backend</button><button onClick={toggleTheme} className="text-quiet" aria-label="Toggle theme">{dark ? <Sun size={17} /> : <Moon size={17} />}</button><button onClick={() => void handleSignOut()} className="text-quiet" aria-label="Sign out"><LogOut size={17} /></button></div>
+          <div className="flex items-center gap-3">{canInviteMembers && workspace.activeWorkspace && (<><button type="button" onClick={() => setInvitesModalOpen(true)} className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-semibold text-quiet hover:bg-black/[.04] sm:flex dark:hover:bg-white/[.05]"><Users size={15} />Manage invitations</button><button type="button" onClick={() => setInviteModalOpen(true)} className="hidden items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-semibold text-quiet hover:bg-black/[.04] sm:flex dark:hover:bg-white/[.05]"><Users size={15} />Invite member</button></>)}<div className="relative">
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen((current) => !current)}
+              aria-label="Notifications"
+              aria-expanded={notificationsOpen}
+              className="relative rounded-lg p-2 text-quiet transition hover:bg-black/[.05] dark:hover:bg-white/[.05]"
+            >
+              <Bell size={19} />
+
+              {notificationData.unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                  {notificationData.unreadCount > 99
+                    ? '99+'
+                    : notificationData.unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notificationsOpen && (
+              <NotificationDropdown
+                notifications={notificationData.notifications}
+                unreadCount={notificationData.unreadCount}
+                loading={notificationData.loading}
+                error={notificationData.error}
+                onMarkAsRead={notificationData.markAsRead}
+                onMarkAllAsRead={notificationData.markAllAsRead}
+                onNotificationClick={handleNotificationClick}
+                onClose={() => setNotificationsOpen(false)}
+              />
+            )}
+          </div><button onClick={toggleTheme} className="text-quiet" aria-label="Toggle theme">{dark ? <Sun size={17} /> : <Moon size={17} />}</button><button onClick={() => void handleSignOut()} className="text-quiet" aria-label="Sign out"><LogOut size={17} /></button></div>
         </header>
         <div className="mx-auto max-w-[1200px] px-6 py-5 max-[680px]:px-4">
           <nav className="flex gap-1 overflow-x-auto border-b border-line">{tabs.map(({ label, icon: Icon }) => <button key={label} onClick={() => setActiveTab(label)} className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-semibold ${activeTab === label ? 'border-brand text-brand' : 'border-transparent text-quiet'}`}><Icon size={14} />{label}</button>)}</nav>
