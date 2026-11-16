@@ -14,11 +14,11 @@ import {
   updateTaskSchema,
   
 } from '../modules/tasks/task.schemas.js'
-
+import { validateBody } from '../middleware/validate.middleware.js'
 
 const taskUpdateRouter = Router()
 
-taskUpdateRouter.patch('/:taskId', requireAuth, async (request, response) => {
+taskUpdateRouter.patch('/:taskId', requireAuth, validateBody(updateTaskSchema), async (request, response) => {
   const taskId = request.params.taskId
 
   if (typeof taskId !== 'string') {
@@ -26,21 +26,12 @@ taskUpdateRouter.patch('/:taskId', requireAuth, async (request, response) => {
     return
   }
 
-  const result = updateTaskSchema.safeParse(request.body)
-
-  if (!result.success) {
-    response.status(400).json({
-      error: 'Invalid task data',
-      details: result.error.flatten().fieldErrors,
-    })
-    return
-  }
-
+  
   try {
     const task = await updateTask(
       taskId,
       response.locals.authUser.id,
-      result.data,
+      request.body,
     )
 
     if (!task) {
@@ -55,7 +46,7 @@ taskUpdateRouter.patch('/:taskId', requireAuth, async (request, response) => {
   }
 })
 
-taskUpdateRouter.put('/:taskId/labels', requireAuth, async (request, response) => {
+taskUpdateRouter.put('/:taskId/labels', requireAuth, validateBody(setTaskLabelsSchema), async (request, response) => {
   const taskId = request.params.taskId
 
   if (typeof taskId !== 'string') {
@@ -63,21 +54,13 @@ taskUpdateRouter.put('/:taskId/labels', requireAuth, async (request, response) =
     return
   }
 
-  const result = setTaskLabelsSchema.safeParse(request.body)
-
-  if (!result.success) {
-    response.status(400).json({
-      error: 'Invalid label data',
-      details: result.error.flatten().fieldErrors,
-    })
-    return
-  }
+ 
 
   try {
     const task = await setTaskLabels(
       taskId,
       response.locals.authUser.id,
-      result.data.labelIds,
+      request.body.labelIds,
     )
 
     if (!task) {
@@ -99,6 +82,7 @@ taskUpdateRouter.put('/:taskId/labels', requireAuth, async (request, response) =
 taskUpdateRouter.put(
   '/:taskId/assignees',
   requireAuth,
+  validateBody(setTaskAssigneesSchema),
   async (request, response) => {
     const taskId = request.params.taskId
 
@@ -107,21 +91,12 @@ taskUpdateRouter.put(
       return
     }
 
-    const result = setTaskAssigneesSchema.safeParse(request.body)
-
-    if (!result.success) {
-      response.status(400).json({
-        error: 'Invalid assignee data',
-        details: result.error.flatten().fieldErrors,
-      })
-      return
-    }
-
+   
     try {
       const task = await setTaskAssignees(
         taskId,
         response.locals.authUser.id,
-        result.data.userIds,
+        request.body.userIds,
       )
 
       if (!task) {

@@ -5,6 +5,7 @@ import {
   listProjectsForWorkspace,
 } from '../modules/projects/project.service.js'
 import { createProjectSchema } from '../modules/projects/project.schemas.js'
+import { validateBody } from '../middleware/validate.middleware.js'
 
 // The router is mounted below /workspaces/:workspaceId, so inherit that path parameter.
 const projectRouter = Router({ mergeParams: true })
@@ -34,28 +35,20 @@ projectRouter.get('/', requireAuth, async (request, response) => {
   }
 })
 
-projectRouter.post('/', requireAuth, async (request, response) => {
+projectRouter.post('/', requireAuth, validateBody(createProjectSchema), async (request, response) => {
   const workspaceId = request.params.workspaceId
   if (typeof workspaceId !== 'string') {
     response.status(400).json({ error: 'A valid workspace ID is required' })
     return
   }
 
-  const result = createProjectSchema.safeParse(request.body)
-
-  if (!result.success) {
-    response.status(400).json({
-      error: 'Invalid project data',
-      details: result.error.flatten().fieldErrors,
-    })
-    return
-  }
+ 
 
   try {
     const project = await createProjectForWorkspace(
       workspaceId,
       response.locals.authUser.id,
-      result.data,
+      request.body,
     )
 
     if (!project) {

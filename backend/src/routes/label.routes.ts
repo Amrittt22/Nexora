@@ -5,7 +5,7 @@ import {
   listLabelsForWorkspace,
 } from '../modules/labels/label.service.js'
 import { createLabelSchema } from '../modules/labels/label.schema.js'
-
+import { validateBody } from '../middleware/validate.middleware.js'
 const labelRouter = Router({ mergeParams: true })
 
 labelRouter.get('/', requireAuth, async (request, response) => {
@@ -36,7 +36,7 @@ labelRouter.get('/', requireAuth, async (request, response) => {
   }
 })
 
-labelRouter.post('/', requireAuth, async (request, response) => {
+labelRouter.post('/', requireAuth,validateBody(createLabelSchema), async (request, response) => {
   const workspaceId = request.params.workspaceId
 
   if (typeof workspaceId !== 'string') {
@@ -44,21 +44,12 @@ labelRouter.post('/', requireAuth, async (request, response) => {
     return
   }
 
-  const result = createLabelSchema.safeParse(request.body)
-
-  if (!result.success) {
-    response.status(400).json({
-      error: 'Invalid label data',
-      details: result.error.flatten().fieldErrors,
-    })
-    return
-  }
 
   try {
     const label = await createLabelForWorkspace(
       workspaceId,
       response.locals.authUser.id,
-      result.data,
+      request.body,
     )
 
     if (!label) {

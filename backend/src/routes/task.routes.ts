@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.middleware.js'
 import { createTaskForProject, listTasksForProject } from '../modules/tasks/task.service.js'
 import { createTaskSchema } from '../modules/tasks/task.schemas.js'
-
+import { validateBody } from '../middleware/validate.middleware.js'
 const taskRouter = Router({ mergeParams: true })
 
 taskRouter.get('/', requireAuth, async (request, response) => {
@@ -27,27 +27,19 @@ taskRouter.get('/', requireAuth, async (request, response) => {
   }
 })
 
-taskRouter.post('/', requireAuth, async (request, response) => {
+taskRouter.post('/', requireAuth, validateBody(createTaskSchema), async (request, response) => {
   const projectId = request.params.projectId
   if (typeof projectId !== 'string') {
     response.status(400).json({ error: 'A valid project ID is required' })
     return
   }
 
-  const result = createTaskSchema.safeParse(request.body)
-  if (!result.success) {
-    response.status(400).json({
-      error: 'Invalid task data',
-      details: result.error.flatten().fieldErrors,
-    })
-    return
-  }
 
   try {
     const task = await createTaskForProject(
       projectId,
       response.locals.authUser.id,
-      result.data,
+      request.body,
     )
 
     if (!task) {

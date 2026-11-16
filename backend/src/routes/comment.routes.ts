@@ -6,6 +6,7 @@ import {
   listCommentsForTask,
   updateComment,
 } from '../modules/tasks/comment.service.js'
+import { validateBody } from '../middleware/validate.middleware.js'
 import {
   createCommentSchema,
   updateCommentSchema,
@@ -48,6 +49,7 @@ commentRouter.get(
 commentRouter.post(
   '/tasks/:taskId/comments',
   requireAuth,
+  validateBody(createCommentSchema),
   async (request, response) => {
     const taskId = request.params.taskId
 
@@ -56,21 +58,11 @@ commentRouter.post(
       return
     }
 
-    const result = createCommentSchema.safeParse(request.body)
-
-    if (!result.success) {
-      response.status(400).json({
-        error: 'Invalid comment data',
-        details: result.error.flatten().fieldErrors,
-      })
-      return
-    }
-
     try {
       const comment = await createComment(
         taskId,
         response.locals.authUser.id,
-        result.data,
+        request.body,
       )
 
       if (!comment) {
@@ -90,6 +82,7 @@ commentRouter.post(
 commentRouter.patch(
   '/comments/:commentId',
   requireAuth,
+  validateBody(updateCommentSchema),
   async (request, response) => {
     const commentId = request.params.commentId
 
@@ -98,21 +91,12 @@ commentRouter.patch(
       return
     }
 
-    const result = updateCommentSchema.safeParse(request.body)
-
-    if (!result.success) {
-      response.status(400).json({
-        error: 'Invalid comment data',
-        details: result.error.flatten().fieldErrors,
-      })
-      return
-    }
 
     try {
       const comment = await updateComment(
         commentId,
         response.locals.authUser.id,
-        result.data,
+        request.body,
       )
 
       if (!comment) {

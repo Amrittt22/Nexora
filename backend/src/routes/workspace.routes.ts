@@ -10,8 +10,12 @@ import {
   WorkspaceMemberPermissionError,
   WorkspaceOwnerProtectionError,
 } from '../modules/workspaces/workspace.service.js'
-import { createWorkspaceSchema,updateWorkspaceMemberRoleSchema} from '../modules/workspaces/workspace.schemas.js'
+import {
+  createWorkspaceSchema,
+  updateWorkspaceMemberRoleSchema,
+} from '../modules/workspaces/workspace.schemas.js'
 import { createWorkspaceInviteSchema } from '../modules/workspaces/workspace-invite.schemas.js'
+import { validateBody } from '../middleware/validate.middleware.js'
 import {
   acceptWorkspaceInvite,
   createWorkspaceInvite,
@@ -41,16 +45,7 @@ workspaceRouter.get('/', requireAuth, async (_request, response) => {
   }
 })
 
-workspaceRouter.post('/', requireAuth, async (request, response) => {
-  const result = createWorkspaceSchema.safeParse(request.body)
-
-  if (!result.success) {
-    response.status(400).json({
-      error: 'Invalid workspace data',
-      details: result.error.flatten().fieldErrors,
-    })
-    return
-  }
+workspaceRouter.post('/', requireAuth, validateBody(createWorkspaceSchema), async (request, response) => {
 
   const authUser = response.locals.authUser
 
@@ -60,7 +55,7 @@ workspaceRouter.post('/', requireAuth, async (request, response) => {
   }
 
   try {
-    const workspace = await createWorkspace(result.data, authUser)
+    const workspace = await createWorkspace(request.body, authUser)
 
     response.status(201).json({ workspace })
   } catch (error) {
@@ -108,6 +103,7 @@ workspaceRouter.get(
 workspaceRouter.patch(
   '/:workspaceId/members/:userId',
   requireAuth,
+  validateBody(updateWorkspaceMemberRoleSchema),
   async (request, response) => {
     const { workspaceId, userId } = request.params
 
@@ -121,24 +117,14 @@ workspaceRouter.patch(
       return
     }
 
-    const result = updateWorkspaceMemberRoleSchema.safeParse(
-      request.body,
-    )
 
-    if (!result.success) {
-      response.status(400).json({
-        error: 'Invalid member role',
-        details: result.error.flatten().fieldErrors,
-      })
-      return
-    }
 
     try {
       const member = await updateWorkspaceMemberRole(
         workspaceId,
         userId,
         response.locals.authUser.id,
-        result.data.role,
+        request.body.role,
       )
 
       response.status(200).json({ member })
@@ -301,6 +287,7 @@ workspaceRouter.delete(
 workspaceRouter.post(
   '/:workspaceId/invites',
   requireAuth,
+  validateBody(createWorkspaceInviteSchema),
   async (request, response) => {
     const workspaceId = request.params.workspaceId
 
@@ -311,21 +298,12 @@ workspaceRouter.post(
       return
     }
 
-    const result = createWorkspaceInviteSchema.safeParse(request.body)
-
-    if (!result.success) {
-      response.status(400).json({
-        error: 'Invalid invitation data',
-        details: result.error.flatten().fieldErrors,
-      })
-      return
-    }
 
     try {
       const invite = await createWorkspaceInvite(
         workspaceId,
         response.locals.authUser.id,
-        result.data,
+        request.body,
       )
 
       const delivery = await sendWorkspaceInviteEmail(invite)
