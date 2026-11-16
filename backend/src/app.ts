@@ -10,7 +10,10 @@ import labelRouter from './routes/label.routes.js'
 import taskActivityRouter from './routes/task-activity.routes.js'
 import commentRouter from './routes/comment.routes.js'
 import notificationRouter from './routes/notification.routes.js'
-
+import {
+  errorHandler,
+  notFoundHandler,
+} from './middleware/error.middleware.js'
 const app = express()
 
 app.use(cors())
@@ -26,5 +29,10 @@ app.use('/api/v1', healthRouter)
 app.use('/api/v1/workspaces/:workspaceId/labels', labelRouter)
 app.use('/api/v1', commentRouter)
 app.use('/api/v1/notifications', notificationRouter)
+// Handle requests that do not match any registered route.
+app.use(notFoundHandler)
+
+// Centralized error handler must always be registered last.
+app.use(errorHandler)
 
 export default app
